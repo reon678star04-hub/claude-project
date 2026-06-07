@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "Bash(pip --version)",
+      "Bash(python -m pip show streamlit)",
+      "Bash(pip install *)",
+      "Bash(python -m streamlit --version)",
+      "Bash(gh auth *)",
+      "PowerShell(gh api user --jq '.login, .email' 2>&1)"
+    ]
+  }
+}
