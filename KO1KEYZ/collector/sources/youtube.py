@@ -37,6 +37,9 @@ def collect():
             seen_ids.add(item_id)
             snippet = entry.get("snippet", {})
             title = snippet.get("title", "")
+            description = snippet.get("description", "")
+            if keyword.lower() not in title.lower() and keyword.lower() not in description.lower():
+                continue
             channel = snippet.get("channelTitle", "")
             items.append({
                 "id": item_id,
