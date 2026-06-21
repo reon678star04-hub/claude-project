@@ -1,10 +1,9 @@
 """KO1KEYS情報収集→新着判定→通知 を1回実行するエントリポイント。"""
-import os
 import json
 from pathlib import Path
 from dotenv import load_dotenv
 
-from sources import x_monitor, web_news
+from sources import web_news
 from notify import line
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -25,11 +24,6 @@ def save_state(state):
 
 def collect_all():
     items = []
-    if os.environ.get("ENABLE_X_MONITOR", "false").lower() == "true":
-        try:
-            items.extend(x_monitor.collect())
-        except Exception as e:
-            print(f"[main] x_monitor failed: {e}")
     try:
         items.extend(web_news.collect())
     except Exception as e:
@@ -41,8 +35,6 @@ def format_item(item):
     lines = [f"[{item['source']}] {item['title']}"]
     if item.get("url"):
         lines.append(item["url"])
-    if item.get("likes") is not None and item["source"] == "x":
-        lines.append(f"いいね: {item['likes']} / リツイート: {item.get('retweets', 0)}")
     return "\n".join(lines)
 
 
