@@ -1,5 +1,6 @@
 """KO1KEYS情報収集→新着判定→通知 を1回実行するエントリポイント。"""
 import json
+from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -8,8 +9,16 @@ from notify import line
 
 BASE_DIR = Path(__file__).resolve().parent
 STATE_PATH = BASE_DIR / "state.json"
+JST = timezone(timedelta(hours=9))
+QUIET_HOURS_START = 23  # 23:00
+QUIET_HOURS_END = 7  # 7:00
 
 load_dotenv(BASE_DIR / ".env")
+
+
+def is_quiet_hours(now=None):
+    hour = (now or datetime.now(JST)).hour
+    return hour >= QUIET_HOURS_START or hour < QUIET_HOURS_END
 
 
 def load_state():
@@ -47,6 +56,10 @@ def main():
 
     if not new_items:
         print("新着情報なし")
+        return
+
+    if is_quiet_hours():
+        print(f"静音時間帯(23:00-7:00 JST)のため通知を見送り: {len(new_items)}件は次回に持ち越し")
         return
 
     body = "\n\n".join(format_item(i) for i in new_items)
