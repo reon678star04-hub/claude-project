@@ -1,4 +1,4 @@
-snscrape
+twikit
 feedparser
 requests
 python-dotenv

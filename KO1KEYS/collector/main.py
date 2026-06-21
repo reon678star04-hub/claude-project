@@ -25,10 +25,11 @@ def save_state(state):
 
 def collect_all():
     items = []
-    try:
-        items.extend(x_monitor.collect())
-    except Exception as e:
-        print(f"[main] x_monitor failed: {e}")
+    if os.environ.get("ENABLE_X_MONITOR", "false").lower() == "true":
+        try:
+            items.extend(x_monitor.collect())
+        except Exception as e:
+            print(f"[main] x_monitor failed: {e}")
     try:
         items.extend(web_news.collect())
     except Exception as e:
