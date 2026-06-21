@@ -1,10 +1,10 @@
-"""KO1KEYS情報収集→新着判定→通知 を1回実行するエントリポイント。"""
+"""KO1KEYZ情報収集→新着判定→通知 を1回実行するエントリポイント。"""
 import json
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from dotenv import load_dotenv
 
-from sources import web_news
+from sources import web_news, youtube
 from notify import line
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -37,6 +37,10 @@ def collect_all():
         items.extend(web_news.collect())
     except Exception as e:
         print(f"[main] web_news failed: {e}")
+    try:
+        items.extend(youtube.collect())
+    except Exception as e:
+        print(f"[main] youtube failed: {e}")
     return items
 
 
@@ -63,7 +67,7 @@ def main():
         return
 
     body = "\n\n".join(format_item(i) for i in new_items)
-    text = f"KO1KEYS 新着情報 ({len(new_items)}件)\n\n{body}"
+    text = f"KO1KEYZ 新着情報 ({len(new_items)}件)\n\n{body}"
 
     line.send(text)
 

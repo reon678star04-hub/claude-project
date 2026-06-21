@@ -25,6 +25,7 @@ jobs:
         env:
           LINE_CHANNEL_ACCESS_TOKEN: ${{ secrets.LINE_CHANNEL_ACCESS_TOKEN }}
           LINE_USER_ID: ${{ secrets.LINE_USER_ID }}
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
           SEARCH_KEYWORD: ${{ vars.SEARCH_KEYWORD }}
         run: python KO1KEYZ/collector/main.py
 
