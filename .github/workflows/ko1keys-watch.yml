@@ -25,6 +25,10 @@ jobs:
         env:
           LINE_CHANNEL_ACCESS_TOKEN: ${{ secrets.LINE_CHANNEL_ACCESS_TOKEN }}
           LINE_USER_ID: ${{ secrets.LINE_USER_ID }}
+          X_USERNAME: ${{ secrets.X_USERNAME }}
+          X_EMAIL: ${{ secrets.X_EMAIL }}
+          X_PASSWORD: ${{ secrets.X_PASSWORD }}
+          ENABLE_X_MONITOR: ${{ vars.ENABLE_X_MONITOR }}
           SEARCH_KEYWORD: ${{ vars.SEARCH_KEYWORD }}
           X_MIN_LIKES: ${{ vars.X_MIN_LIKES }}
           X_MIN_RETWEETS: ${{ vars.X_MIN_RETWEETS }}

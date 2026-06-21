@@ -1,40 +1,46 @@
 """KO1KEYSキーワードでXを検索し、注目度の高い投稿を抽出する。
 
-snscrapeはAPIキー無しでX検索結果を取得できるOSSツール。
-X側の仕様変更で動作しなくなる可能性がある点は運用上の制約として承知の上で使用する。
+twikit（作業用Xアカウントのログイン状態を使った非公式クライアント）を使用する。
+X公式APIの無料プランは検索/読み取りができないため、無料で実現するための代替手段。
+X側の規約上は非公式な利用にあたり、使用するアカウントが凍結・制限されるリスクがある点は
+作業用の別アカウントを使うことで本アカウントへの影響を避ける前提で運用する。
 """
 import os
-import subprocess
-import json
-from datetime import datetime, timedelta, timezone
+import asyncio
+from twikit import Client
+
+COOKIES_PATH = os.path.join(os.path.dirname(__file__), "..", "x_cookies.json")
 
 
-def fetch_posts(keyword: str, since_hours: int = 24, limit: int = 100):
-    since = (datetime.now(timezone.utc) - timedelta(hours=since_hours)).strftime("%Y-%m-%d")
-    query = f"{keyword} since:{since}"
-    cmd = [
-        "snscrape",
-        "--jsonl",
-        "--max-results", str(limit),
-        "twitter-search", query,
-    ]
-    result = subprocess.run(cmd, capture_output=True, text=True, check=True)
-    posts = []
-    for line in result.stdout.splitlines():
-        if not line.strip():
-            continue
-        posts.append(json.loads(line))
-    return posts
+async def _login(client: Client):
+    username = os.environ.get("X_USERNAME")
+    email = os.environ.get("X_EMAIL")
+    password = os.environ.get("X_PASSWORD")
+    if not all([username, email, password]):
+        raise RuntimeError("X_USERNAME / X_EMAIL / X_PASSWORD が設定されていません")
+
+    if os.path.exists(COOKIES_PATH):
+        client.load_cookies(COOKIES_PATH)
+        return
+
+    await client.login(auth_info_1=username, auth_info_2=email, password=password)
+    client.save_cookies(COOKIES_PATH)
+
+
+async def _search(keyword: str, limit: int):
+    client = Client("ja-JP")
+    await _login(client)
+    tweets = await client.search_tweet(keyword, "Latest", count=limit)
+    return tweets
+
+
+def fetch_posts(keyword: str, limit: int = 100):
+    return asyncio.run(_search(keyword, limit))
 
 
 def filter_by_engagement(posts, min_likes: int, min_retweets: int):
-    filtered = []
-    for p in posts:
-        likes = p.get("likeCount") or 0
-        retweets = p.get("retweetCount") or 0
-        if likes >= min_likes or retweets >= min_retweets:
-            filtered.append(p)
-    filtered.sort(key=lambda p: (p.get("likeCount") or 0) + (p.get("retweetCount") or 0), reverse=True)
+    filtered = [p for p in posts if (p.favorite_count or 0) >= min_likes or (p.retweet_count or 0) >= min_retweets]
+    filtered.sort(key=lambda p: (p.favorite_count or 0) + (p.retweet_count or 0), reverse=True)
     return filtered
 
 
@@ -49,16 +55,16 @@ def collect():
         posts = fetch_posts(keyword)
         top_posts = filter_by_engagement(posts, min_likes, min_retweets)
         for p in top_posts:
-            item_id = f"x:{p.get('id')}"
+            item_id = f"x:{p.id}"
             if item_id in seen_ids:
                 continue
             seen_ids.add(item_id)
             items.append({
                 "id": item_id,
-                "title": (p.get("rawContent") or p.get("content") or "")[:120],
-                "url": p.get("url"),
-                "likes": p.get("likeCount") or 0,
-                "retweets": p.get("retweetCount") or 0,
+                "title": (p.text or "")[:120],
+                "url": f"https://x.com/{p.user.screen_name}/status/{p.id}",
+                "likes": p.favorite_count or 0,
+                "retweets": p.retweet_count or 0,
                 "source": "x",
             })
     return items
