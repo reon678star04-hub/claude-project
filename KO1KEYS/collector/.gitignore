@@ -2,4 +2,3 @@
 __pycache__/
 *.pyc
 .venv/
-x_cookies.json
