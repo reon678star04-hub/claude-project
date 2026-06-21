@@ -1,0 +1,4 @@
+snscrape
+feedparser
+requests
+python-dotenv
