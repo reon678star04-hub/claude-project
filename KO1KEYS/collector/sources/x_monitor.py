@@ -39,9 +39,9 @@ def filter_by_engagement(posts, min_likes: int, min_retweets: int):
 
 
 def collect():
-    keywords = [k.strip() for k in os.environ.get("SEARCH_KEYWORD", "KO1KEYZ").split(",") if k.strip()]
-    min_likes = int(os.environ.get("X_MIN_LIKES", "50"))
-    min_retweets = int(os.environ.get("X_MIN_RETWEETS", "10"))
+    keywords = [k.strip() for k in (os.environ.get("SEARCH_KEYWORD") or "KO1KEYZ").split(",") if k.strip()]
+    min_likes = int(os.environ.get("X_MIN_LIKES") or "50")
+    min_retweets = int(os.environ.get("X_MIN_RETWEETS") or "10")
 
     items = []
     seen_ids = set()

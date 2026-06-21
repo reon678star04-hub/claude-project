@@ -5,7 +5,7 @@ from urllib.parse import quote
 
 
 def collect():
-    keywords = [k.strip() for k in os.environ.get("SEARCH_KEYWORD", "KO1KEYZ").split(",") if k.strip()]
+    keywords = [k.strip() for k in (os.environ.get("SEARCH_KEYWORD") or "KO1KEYZ").split(",") if k.strip()]
 
     items = []
     seen_ids = set()
