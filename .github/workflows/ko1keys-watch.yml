@@ -1,4 +1,4 @@
-name: KO1KEYS Watch
+name: KO1KEYZ Watch
 
 on:
   schedule:
@@ -19,19 +19,19 @@ jobs:
           python-version: "3.11"
 
       - name: Install dependencies
-        run: pip install -r KO1KEYS/collector/requirements.txt
+        run: pip install -r KO1KEYZ/collector/requirements.txt
 
       - name: Run collector
         env:
           LINE_CHANNEL_ACCESS_TOKEN: ${{ secrets.LINE_CHANNEL_ACCESS_TOKEN }}
           LINE_USER_ID: ${{ secrets.LINE_USER_ID }}
           SEARCH_KEYWORD: ${{ vars.SEARCH_KEYWORD }}
-        run: python KO1KEYS/collector/main.py
+        run: python KO1KEYZ/collector/main.py
 
       - name: Commit updated state
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add KO1KEYS/collector/state.json
-          git diff --cached --quiet || git commit -m "Update KO1KEYS watch state [skip ci]"
+          git add KO1KEYZ/collector/state.json
+          git diff --cached --quiet || git commit -m "Update KO1KEYZ watch state [skip ci]"
           git push
