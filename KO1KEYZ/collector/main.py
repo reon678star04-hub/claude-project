@@ -1,10 +1,10 @@
-"""KO1KEYS情報収集→新着判定→通知 を1回実行するエントリポイント。"""
+"""KO1KEYZ情報収集→新着判定→通知 を1回実行するエントリポイント。"""
 import json
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from dotenv import load_dotenv
 
-from sources import web_news
+from sources import web_news, youtube
 from notify import line
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -12,6 +12,9 @@ STATE_PATH = BASE_DIR / "state.json"
 JST = timezone(timedelta(hours=9))
 QUIET_HOURS_START = 23  # 23:00
 QUIET_HOURS_END = 7  # 7:00
+DIGEST_THRESHOLD = 5  # 新着がこれを超えたら重要度TOP_Nのみ通知
+TOP_N = 5
+IMPORTANT_KEYWORDS = ["デビュー", "決定", "発表", "速報", "緊急"]
 
 load_dotenv(BASE_DIR / ".env")
 
@@ -37,6 +40,10 @@ def collect_all():
         items.extend(web_news.collect())
     except Exception as e:
         print(f"[main] web_news failed: {e}")
+    try:
+        items.extend(youtube.collect())
+    except Exception as e:
+        print(f"[main] youtube failed: {e}")
     return items
 
 
@@ -45,6 +52,25 @@ def format_item(item):
     if item.get("url"):
         lines.append(item["url"])
     return "\n".join(lines)
+
+
+def importance_score(item):
+    title = item.get("title", "")
+    return sum(1 for kw in IMPORTANT_KEYWORDS if kw in title)
+
+
+def build_notification(new_items):
+    if len(new_items) > DIGEST_THRESHOLD:
+        ranked = sorted(new_items, key=importance_score, reverse=True)
+        top = ranked[:TOP_N]
+        omitted = len(new_items) - len(top)
+        body = "\n\n".join(format_item(i) for i in top)
+        return (
+            f"KO1KEYZ 新着情報 ({len(new_items)}件中、関連度の高い{len(top)}件)\n\n"
+            f"{body}\n\n(ほか{omitted}件は省略)"
+        )
+    body = "\n\n".join(format_item(i) for i in new_items)
+    return f"KO1KEYZ 新着情報 ({len(new_items)}件)\n\n{body}"
 
 
 def main():
@@ -62,8 +88,7 @@ def main():
         print(f"静音時間帯(23:00-7:00 JST)のため通知を見送り: {len(new_items)}件は次回に持ち越し")
         return
 
-    body = "\n\n".join(format_item(i) for i in new_items)
-    text = f"KO1KEYS 新着情報 ({len(new_items)}件)\n\n{body}"
+    text = build_notification(new_items)
 
     line.send(text)
 

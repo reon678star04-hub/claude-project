@@ -1,4 +1,4 @@
-"""Google News RSSを使い、KO1KEYSに関するWeb/ニュース言及を無料で取得する。"""
+"""Google News RSSを使い、KO1KEYZに関するWeb/ニュース言及を無料で取得する。"""
 import os
 import feedparser
 from urllib.parse import quote
